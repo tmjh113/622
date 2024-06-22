@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林佰懿生日快樂！</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            color: #ff4081;
+            margin-bottom: 20px;
+        }
+        .cake {
+            font-size: 5em;
+            cursor: pointer;
+        }
+        .balloons {
+            position: absolute;
+            font-size: 2em;
+            opacity: 0;
+            transition: all 2s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>林佰懿生日快樂！</h1>
+        <div class="cake" id="cake">🎂</div>
+    </div>
+
+    <script>
+        const cake = document.getElementById('cake');
+        let clickCount = 0;
+
+        cake.addEventListener('click', () => {
+            clickCount++;
+            if (clickCount % 2 === 1) {
+                cake.textContent = '🎉';
+            } else {
+                cake.textContent = '🎂';
+            }
+            createBalloon();
+        });
+
+        function createBalloon() {
+            const balloon = document.createElement('div');
+            balloon.className = 'balloons';
+            balloon.textContent = '🎈';
+            balloon.style.left = Math.random() * window.innerWidth + 'px';
+            balloon.style.top = window.innerHeight + 'px';
+            document.body.appendChild(balloon);
+
+            setTimeout(() => {
+                balloon.style.opacity = '1';
+                balloon.style.top = '0px';
+            }, 100);
+
+            setTimeout(() => {
+                balloon.remove();
+            }, 10000);
+        }
+
+        // 自動創建氣球
+        setInterval(createBalloon, 2000);
+    </script>
+</body>
+</html>
