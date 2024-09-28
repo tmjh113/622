@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>天中乾淨專屬網站</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f0f4f8;
+            --text-color: #2c3e50;
+            --shadow-color: rgba(0,0,0,0.1);
+            --border-radius: 20px;
+            --transition-duration: 0.3s;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            min-height: 100vh;
+            background-color: white;
+            overflow-y: auto;
+            box-shadow: 0 0 30px var(--shadow-color);
+            border-radius: var(--border-radius);
+            -webkit-overflow-scrolling: touch;
+            padding: 20px;
+        }
+        
+        .post {
+            border: none;
+            padding: 30px;
+            margin: 20px 0;
+            transition: all var(--transition-duration) ease;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            background-color: #ffffff;
+            position: relative;
+            border-radius: var(--border-radius);
+        }
+        
+        .post:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-color);
+        }
+        
+        .post p {
+            color: var(--text-color);
+            line-height: 1.8;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .post-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        
+        .post-date {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .system-message {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-style: italic;
+            color: #34495e;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+        
+        .screenshot-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .screenshot-modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            text-align: center;
+        }
+        
+        .screenshot-checkbox {
+            margin-right: 15px;
+        }
+        
+        .screenshot-button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all var(--transition-duration) ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .screenshot-button:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+        
+        .post-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            .post {
+                margin: 10px 0;
+                padding: 20px;
+            }
+            
+            .screenshot-modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+        
+        /* New styles for enhanced design */
+        .page-header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .post-author {
+            font-weight: 500;
+            font-size: 18px;
+        }
+        
+        .post-content p {
+            text-align: justify;
+            text-justify: inter-word;
+        }
+        
+        .system-message {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--secondary-color);
+            padding: 15px;
+            margin-top: 20px;
+            font-style: normal;
+            color: #1b5e20;
+        }
+        
+        .screenshot-options {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .screenshot-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .screenshot-option label {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .download-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .download-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .media-download-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">天中乾淨專屬網站</h1>
+        </header>
+        <div id="posts-container"></div>
+    </div>
+
+    <div id="screenshotModal" class="screenshot-modal">
+        <div class="screenshot-modal-content">
+            <h2>選擇要截圖的貼文</h2>
+            <div id="screenshotOptions" class="screenshot-options"></div>
+            <button class="screenshot-button" onclick="captureSelectedPosts()">截圖選中的貼文</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAw3LKSDHHwasOhN0l63lO4I-AO1xeGGU",
+            authDomain: "tmjh113.firebaseapp.com",
+            projectId: "tmjh113",
+            storageBucket: "tmjh113.appspot.com",
+            messagingSenderId: "936878916477",
+            appId: "1:936878916477:web:cbff479db9898b0a218214",
+            measurementId: "G-J5WT01ZLBD"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 獲取並顯示 posts
+        function getPosts() {
+            db.collection("posts").orderBy("createdAt", "desc").get().then((querySnapshot) => {
+                const postsContainer = document.getElementById("posts-container");
+                querySnapshot.forEach((doc) => {
+                    const post = doc.data();
+                    const postElement = document.createElement("div");
+                    postElement.className = "post";
+                    postElement.id = `post-${doc.id}`;
+                    const postDate = post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString('zh-TW') : '未知日期';
+                    
+                    // 處理 mediaUrls
+                    const mediaUrls = post.mediaUrls || [];
+                    let downloadButtonsHtml = '<div class="media-download-container">';
+                    
+                    if (mediaUrls.length > 0) {
+                        mediaUrls.forEach((media, index) => {
+                            if (media.type === 'image') {
+                                downloadButtonsHtml += `<a href="${media.url}" class="download-button" download="image_${index + 1}.jpg">下載圖片 ${index + 1}</a>`;
+                            } else if (media.type === 'gif') {
+                                downloadButtonsHtml += `<a href="${media.url}" class="download-button" download="gif_${index + 1}.gif">下載GIF ${index + 1}</a>`;
+                            }
+                        });
+                    }
+                    downloadButtonsHtml += '</div>';
+
+                    postElement.innerHTML = `
+                        <div class="post-header">
+                            <div class="post-avatar">${post.author ? post.author.charAt(0).toUpperCase() : 'U'}</div>
+                            <div>
+                                <div class="post-author">${post.author || '匿名用戶'}</div>
+                                <div class="post-date">${postDate}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            ${downloadButtonsHtml}
+                            <p>${post.content || '無內容'}</p>
+                        </div>
+                        <div class="system-message">天中乾淨專屬系統。</div>
+                    `;
+                    postsContainer.appendChild(postElement);
+                });
+                addScreenshotButton();
+            }).catch(function(error) {
+                console.error("獲取 posts 時出錯：", error);
+                const postsContainer = document.getElementById("posts-container");
+                postsContainer.innerHTML = '<div class="error-message">無法載入貼文，請稍後再試。</div>';
+            });
+        }
+
+        function addScreenshotButton() {
+            const screenshotButton = document.createElement('button');
+            screenshotButton.textContent = '截圖多則貼文';
+            screenshotButton.className = 'screenshot-button';
+            screenshotButton.style.position = 'fixed';
+            screenshotButton.style.bottom = '20px';
+            screenshotButton.style.right = '20px';
+            screenshotButton.style.zIndex = '999';
+            screenshotButton.onclick = openScreenshotModal;
+            document.body.appendChild(screenshotButton);
+        }
+
+        function openScreenshotModal() {
+            const modal = document.getElementById('screenshotModal');
+            const optionsContainer = document.getElementById('screenshotOptions');
+            optionsContainer.innerHTML = '';
+
+            const posts = document.querySelectorAll('.post');
+            posts.forEach((post, index) => {
+                const option = document.createElement('div');
+                option.className = 'screenshot-option';
+                option.innerHTML = `
+                    <input type="checkbox" id="post-option-${index}" class="screenshot-checkbox" value="${post.id}">
+                    <label for="post-option-${index}">${post.querySelector('p').textContent.substring(0, 50)}...</label>
+                `;
+                optionsContainer.appendChild(option);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        async function captureSelectedPosts() {
+            const selectedPosts = Array.from(document.querySelectorAll('.screenshot-checkbox:checked')).map(checkbox => checkbox.value);
+            if (selectedPosts.length === 0) {
+                alert('請至少選擇一則貼文');
+                return;
+            }
+
+            const postsToCapture = selectedPosts.map(id => document.getElementById(id));
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.backgroundColor = 'white';
+            container.style.maxWidth = '100%';
+            container.style.width = '100%';
+            
+            for (const post of postsToCapture) {
+                const clonedPost = post.cloneNode(true);
+                clonedPost.style.margin = '0 0 20px 0';
+                clonedPost.style.width = '100%';
+                // 移除下載按鈕
+                const downloadContainer = clonedPost.querySelector('.media-download-container');
+                if (downloadContainer) {
+                    downloadContainer.remove();
+                }
+                container.appendChild(clonedPost);
+            }
+
+            document.body.appendChild(container);
+
+            try {
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    width: container.offsetWidth,
+                    height: container.offsetHeight,
+                    onclone: function(clonedDoc) {
+                        const clonedContainer = clonedDoc.querySelector('div');
+                        clonedContainer.style.position = 'absolute';
+                        clonedContainer.style.left = '0';
+                        clonedContainer.style.top = '0';
+                    }
+                });
+
+                const link = document.createElement('a');
+                link.download = '多則貼文截圖.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch (error) {
+                console.error('截圖過程中出錯：', error);
+                alert('截圖失敗，請稍後再試。');
+            } finally {
+                document.body.removeChild(container);
+                document.getElementById('screenshotModal').style.display = 'none';
+            }
+        }
+
+        // 頁面加載時獲取 posts
+        window.onload = getPosts;
+    </script>
+</body>
+</html>
