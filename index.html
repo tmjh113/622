@@ -329,6 +329,7 @@
                     <p><strong class="text-indigo-600">v1.1:</strong> 新增切換發佈功能，讓用戶可以發佈更短的內容。</p>
                     <p><strong class="text-indigo-600">v1.2:</strong> 優化界面設計，提升用戶體驗。新增長文標題功能。</p>
                     <p><strong class="text-indigo-600">v1.3:</strong> 加入gif功能</p>
+                    <p><strong class="text-indigo-600">v1.4:</strong> 新增已加入的 GIF 可以刪除功能</p>
                 </div>
             </div>
         </div>
@@ -443,10 +444,27 @@
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.classList.add('h-24', 'w-24', 'object-cover', 'rounded-lg', 'shadow-md', 'transition-transform', 'duration-300', 'hover:scale-110');
-                mediaPreview.appendChild(img);
+                const deleteButton = createDeleteButton();
+                const container = document.createElement('div');
+                container.classList.add('relative');
+                container.appendChild(img);
+                container.appendChild(deleteButton);
+                mediaPreview.appendChild(container);
             }
             reader.readAsDataURL(file);
         });
+    }
+
+    function createDeleteButton() {
+        const deleteButton = document.createElement('button');
+        deleteButton.innerHTML = '&times;';
+        deleteButton.classList.add('absolute', 'top-0', 'right-0', 'bg-red-500', 'text-white', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center', 'cursor-pointer', 'hover:bg-red-600', 'transition-colors');
+        deleteButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            this.parentElement.remove();
+            selectedGifs = selectedGifs.filter(gif => gif.element !== this.parentElement);
+        });
+        return deleteButton;
     }
 
     giphyButton.addEventListener('click', () => {
@@ -511,17 +529,22 @@
     }
 
     function selectGif(gif) {
-        if (selectedGifs.length + mediaPreview.children.length >= 2) {
+        if (mediaPreview.children.length >= 2) {
             alert('最多只能選擇兩個媒體檔案（圖片或 GIF）');
             return;
         }
 
-        selectedGifs.push(gif);
         const img = document.createElement('img');
         img.src = gif.images.fixed_height.url;
         img.alt = gif.title;
         img.classList.add('h-24', 'w-24', 'object-cover', 'rounded-lg', 'shadow-md', 'transition-transform', 'duration-300', 'hover:scale-110');
-        mediaPreview.appendChild(img);
+        const deleteButton = createDeleteButton();
+        const container = document.createElement('div');
+        container.classList.add('relative');
+        container.appendChild(img);
+        container.appendChild(deleteButton);
+        mediaPreview.appendChild(container);
+        selectedGifs.push({gif: gif, element: container});
         giphyModal.style.display = 'none';
     }
 
@@ -566,7 +589,7 @@
 
             // 添加選擇的 GIF 並上傳到 Firebase Storage
             for (let i = 0; i < selectedGifs.length; i++) {
-                const gif = selectedGifs[i];
+                const gif = selectedGifs[i].gif;
                 const response = await fetch(gif.images.original.url);
                 const blob = await response.blob();
                 const storageRef = storage.ref('gifs/' + Date.now() + '_' + gif.id + '.gif');
